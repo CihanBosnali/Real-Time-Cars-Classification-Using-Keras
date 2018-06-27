@@ -144,9 +144,11 @@ def save_model(model, mname="model_new"):
     with open(mname+'.json', 'w') as outfile:
         json.dump(model_json, outfile)
 
-
-if __name__ == "__main__":
+def run_training():
     data, labels = get_data()
     model = create_model(input_shape=(250,200,3))
     model = train_model(data, labels, model, bsize=16, epochs=10)
     save_model(model, mname="car_model")
+
+if __name__ == "__main__":
+    run_training()
