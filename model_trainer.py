@@ -5,22 +5,30 @@ import matplotlib.pyplot as plt
 
 import cv2
 
-import pandas as pd
-
 import tensorflow as tf
 
 import keras
 from keras.models import Sequential
-
 from keras.layers import Dense, Dropout, Flatten, Lambda
 from keras.layers import Conv2D, MaxPooling2D, Cropping2D
-
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import SGD
 
 import random
-# (264, 198, 3)
 
+import json
+
+def get_data(data_path="./data/cars_train/",
+             labels_path="./data/devkit/train_perfect_preds.txt"):
+    data = []
+    labels = []
+    with open(labels_path, "r") as labelsfile:
+        labels = labelsfile.readlines()
+
+    return data, labels
+
+# This function creates the architacture of our model
+# Input shape? (264, 198, 3)
 def create_model(input_shape, num_of_classes=196):
     
     model = Sequential()
@@ -40,11 +48,11 @@ def create_model(input_shape, num_of_classes=196):
     # Classification
     model.add(Flatten())
 
-    model.add(Dense(512), activation='relu')
+    model.add(Dense(512, activation='relu'))
 
-    model.add(Dense(216), activation='relu')
+    model.add(Dense(216, activation='relu'))
 
-    model.add(Dense(216), activation='relu')
+    model.add(Dense(216, activation='relu'))
 
     model.add(Dense(num_of_classes, activation="softmax"))    
 
@@ -57,6 +65,7 @@ def create_model(input_shape, num_of_classes=196):
 
 def get_matrix(fname):
     img = cv2.imread(fname)
+    img = cv2.resize(img, (250, 200))
     return img 
 
 # Generate data for training
@@ -97,6 +106,17 @@ def generate_data_val(data_names, labels ,bsize, dlen, reindex):
         if i+bsize > dlen:
             i = splitpoint
 
+def plot_training(hs):
+    # Train and validation loss chart
+    print(hs.history.keys())
+    
+    plt.plot(hs.history['loss'])
+    plt.plot(hs.history['val_loss'])
+    plt.title('model mean squared error loss')
+    plt.ylabel('mean squared error loss')
+    plt.xlabel('epoch')
+    plt.legend(['training set', 'validation set'], loc='upper right')
+    plt.show()
 
 def train_model(data_names, labels, model, bsize=16, epochs=10):
     
@@ -112,4 +132,21 @@ def train_model(data_names, labels, model, bsize=16, epochs=10):
                              steps_per_epoch=int(splitpoint/ bsize),
                              validation_data=generate_data_val(data_names, labels ,bsize, dlen, reindex),
                              validation_steps=(dlen-splitpoint)/bsize, epochs=epochs,callbacks=[model_checkpoint])
+
+    plot_training(hs)
+
+    return model
     
+def save_model(model, mname="model_new"):
+    # Save model weights and json.
+    model.save_weights(mname+'.h5')
+    model_json  = model.to_json()
+    with open(mname+'.json', 'w') as outfile:
+        json.dump(model_json, outfile)
+
+
+if __name__ == "__main__":
+    data, labels = get_data()
+    model = create_model(input_shape=(250,200,3))
+    model = train_model(data, labels, model, bsize=16, epochs=10)
+    save_model(model, mname="car_model")
