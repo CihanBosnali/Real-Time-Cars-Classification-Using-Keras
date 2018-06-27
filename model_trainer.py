@@ -35,27 +35,26 @@ def create_model(input_shape, num_of_classes=196):
     # Feature Recognation
     model.add(Lambda(lambda x: (2*x / 255.0) - 1.0, input_shape=input_shape))
 
-    model.add(Conv2D(16, (5,5), activation="relu", strides=(2,2)))
+    model.add(Conv2D(32, (5,5), activation="relu", strides=(2,2)))
     model.add(MaxPooling2D(pool_size=(2,2), strides=(1,1), padding="same"))
 
-    model.add(Conv2D(32, (5,5), activation="relu", strides=(2,2)))
+    model.add(Conv2D(64, (5,5), activation="relu", strides=(2,2)))
     
     model.add(Conv2D(64, (3,3), activation="relu", strides=(2,2)))
     
-
     model.add(Conv2D(128, (2,2), activation="relu", strides=(2,2)))
 
     # Classification
     model.add(Flatten())
 
     model.add(Dense(512, activation='relu'))
-    model.add(Dropout(0.4))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.5))
 
     model.add(Dense(216, activation='relu'))
-    model.add(Dropout(0.4))
-
-    model.add(Dense(216, activation='relu'))
-    model.add(Dropout(0.4))
+    model.add(Dropout(0.5))
 
     model.add(Dense(num_of_classes, activation="softmax"))    
 
