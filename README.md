@@ -1,1 +1,2 @@
-# Real-Time-Brand-Logo-Classification-Using-Keras
+# Real-Time-Cars-Classification-Using-Keras
+This keras model classifies different models of cars using Stanford's Car Dataset. Than I used it in real-time, but because of the similarity of different classes and computatinal cost of learning all different features of similar classes, it is seen that overfitting is inevitable in small sized neural networks. For better results, larger neural networks can be trained using GPU's.
