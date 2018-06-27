@@ -16,15 +16,14 @@ from keras.optimizers import SGD
 
 import random
 
+import glob
 import json
 
 def get_data(data_path="./data/cars_train/",
              labels_path="./data/devkit/train_perfect_preds.txt"):
-    data = []
-    labels = []
+    data = glob.glob(data_path+"*.jpg")
     with open(labels_path, "r") as labelsfile:
-        labels = labelsfile.readlines()
-
+        labels = labelsfile.read().split("\n")
     return data, labels
 
 # This function creates the architacture of our model
@@ -50,13 +49,17 @@ def create_model(input_shape, num_of_classes=196):
 
     model.add(Dense(512, activation='relu'))
 
+    model.add(Dropout(0.3))
+
     model.add(Dense(216, activation='relu'))
 
     model.add(Dense(216, activation='relu'))
 
     model.add(Dense(num_of_classes, activation="softmax"))    
 
-    model.compile(loss=keras.losses.categorical_crossentropy, optimizer='adam')
+    sgd = SGD(lr=0.01, clipvalue=0.5)
+
+    model.compile(loss=keras.losses.categorical_crossentropy, optimizer=sgd)
 
     model.summary()
 
@@ -65,7 +68,7 @@ def create_model(input_shape, num_of_classes=196):
 
 def get_matrix(fname):
     img = cv2.imread(fname)
-    img = cv2.resize(img, (250, 200))
+    img = cv2.resize(img, (200, 250))
     return img 
 
 # Generate data for training
@@ -76,13 +79,16 @@ def generate_data(data_names, labels ,bsize, dlen, reindex):
         x = []
         y = []
         for j in range(i,i+bsize):
-            ix = reindex[j]
+            ix = reindex[j] - 1
+            # -1 because dataset starts from 1 but arrays from 0
             img = get_matrix(data_names[ix])
-            lbl = np.array([labels[ix]])
+            l = int(labels[ix]) - 1
+            lbl = np.zeros((196))
+            lbl[l] = 1
             x.append(img)
             y.append(lbl)
         x = np.array(x)
-        y = np.array(y)
+        y = np.array(y)        
         yield (x,y)
         i +=bsize
         if i+bsize > splitpoint:
@@ -96,11 +102,16 @@ def generate_data_val(data_names, labels ,bsize, dlen, reindex):
         x = []
         y = []
         for j in range(i,i+bsize):
-            ix = reindex[j]
-            x.append(get_matrix(data_names[ix]))
-            y.append(np.array([labels[ix]]))
+            ix = reindex[j] - 1
+            # -1 because dataset starts from 1 but arrays from 0
+            img = get_matrix(data_names[ix])
+            l = int(labels[ix]) - 1
+            lbl = np.zeros((196))
+            lbl[l] = 1
+            x.append(img)
+            y.append(lbl)
         x = np.array(x)
-        y = np.array(y)
+        y = np.array(y)        
         yield (x,y)
         i +=bsize
         if i+bsize > dlen:
