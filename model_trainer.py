@@ -68,7 +68,7 @@ def generate_data(data_names, labels ,bsize, dlen, reindex):
         y = []
         for j in range(i,i+bsize):
             ix = reindex[j]
-            img = get_matrix(images[ix])
+            img = get_matrix(data_names[ix])
             lbl = np.array([labels[ix]])
             x.append(img)
             y.append(lbl)
@@ -88,7 +88,7 @@ def generate_data_val(data_names, labels ,bsize, dlen, reindex):
         y = []
         for j in range(i,i+bsize):
             ix = reindex[j]
-            x.append(get_matrix(images[ix]))
+            x.append(get_matrix(data_names[ix]))
             y.append(np.array([labels[ix]]))
         x = np.array(x)
         y = np.array(y)
@@ -106,7 +106,8 @@ def train_model(data_names, labels, model, bsize=16, epochs=10):
     random.seed(1234)
     random.shuffle(reindex)
 
-    
+    model_checkpoint = ModelCheckpoint('weights.h5', monitor='val_loss', save_best_only=True)
+
     hs = model.fit_generator(generate_data(data_names, labels ,bsize, dlen, reindex),
                              steps_per_epoch=int(splitpoint/ bsize),
                              validation_data=generate_data_val(data_names, labels ,bsize, dlen, reindex),
